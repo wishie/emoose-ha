@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "emoose X300",
+        "description": "Enter the MQTT topic prefix your station publishes under. If its traffic is redirected to your own broker unchanged, this is \"$oc/devices/<device id>\" (the device id is in the station's report topic). If you bridge it into a local broker under a different name, use that prefix instead.",
+        "data": {
+          "topic_prefix": "Topic prefix"
+        }
+      }
+    },
+    "error": {
+      "invalid_prefix": "Enter a topic prefix without the wildcards + or #."
+    },
+    "abort": {
+      "already_configured": "This topic prefix is already set up.",
+      "mqtt_required": "The MQTT integration is not set up or not connected. Set it up first."
+    }
+  }
+}

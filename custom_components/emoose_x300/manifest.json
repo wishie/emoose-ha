@@ -1,0 +1,13 @@
+{
+  "domain": "emoose_x300",
+  "name": "emoose X300",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": ["mqtt"],
+  "documentation": "https://github.com/YOUR-USERNAME/ha-emoose-x300",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/YOUR-USERNAME/ha-emoose-x300/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
