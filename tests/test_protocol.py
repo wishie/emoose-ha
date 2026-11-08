@@ -1,5 +1,6 @@
 """Tests for the emoose X300 protocol module, using frames captured from a real unit."""
 
+import dataclasses
 import importlib.util
 import pathlib
 import sys
@@ -153,6 +154,26 @@ def test_auto_fan_setting_toggle():
     assert on.dc_charging and off.dc_charging
     # Frames without the setting changed all had Auto-Fan on.
     assert all(report(n).auto_fan_on for n in ("idle_95", "ac_charge_120w", "solar_charge_120w"))
+
+
+@pytest.mark.parametrize(
+    ("name", "code", "label"),
+    [
+        ("screen_never", 0, "Never"),
+        ("screen_30s", 1, "30 seconds"),
+        ("screen_1min", 2, "1 minute"),
+        ("idle_95", 3, "5 minutes"),  # every frame captured before the setting was changed
+    ],
+)
+def test_screen_standby_codes(name, code, label):
+    r = report(name)
+    assert r.screen_standby_code == code
+    assert r.screen_standby == label
+
+
+def test_unknown_screen_standby_code_is_shown_as_unknown():
+    r = report("idle_95")
+    assert dataclasses.replace(r, screen_standby_code=9).screen_standby == "Unknown (9)"
 
 
 def test_eco_and_sound_toggles():

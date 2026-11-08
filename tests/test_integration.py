@@ -114,6 +114,19 @@ async def test_auto_fan_setting(hass, mqtt_mock):
     assert state(hass, "binary_sensor.emoose_x300_auto_fan") == "off"
 
 
+async def test_screen_standby_sensor(hass, mqtt_mock):
+    await setup_entry(hass)
+    for name, label in (
+        ("idle_95", "5 minutes"),
+        ("screen_30s", "30 seconds"),
+        ("screen_1min", "1 minute"),
+        ("screen_never", "Never"),
+    ):
+        async_fire_mqtt_message(hass, REPORT_TOPIC, FRAMES[name])
+        await hass.async_block_till_done()
+        assert state(hass, "sensor.emoose_x300_screen_standby") == label
+
+
 async def test_invalid_payloads_are_ignored(hass, mqtt_mock):
     await setup_entry(hass)
     async_fire_mqtt_message(hass, REPORT_TOPIC, FRAMES["idle_95"])

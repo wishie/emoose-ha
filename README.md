@@ -17,7 +17,7 @@ unit's own network traffic; use it at your own risk.
 | AC output / DC output (sensors **and switches**) | the switches send the same commands as the app |
 | Charging, **Charge complete (likely)** | the second is seen once and not yet confirmed |
 | USB port active flags, Sound, ECO mode, Auto-fan | settings are read-only; the USB flags can lag a second or two behind a plug or unplug |
-| Serial number, software and hardware version | diagnostic |
+| Serial number, software and hardware version, screen standby setting | diagnostic |
 
 Details and confidence levels are in [docs/protocol.md](docs/protocol.md).
 

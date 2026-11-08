@@ -136,6 +136,7 @@ SENSORS: tuple[EmooseSensorDescription, ...] = (
     _text("serial", "Serial number", "serial", "mdi:identifier"),
     _text("software_version", "Software version", "software_version", "mdi:chip"),
     _text("hardware_version", "Hardware version", "hardware_version", "mdi:chip"),
+    _text("screen_standby", "Screen standby", "screen_standby", "mdi:monitor"),
 )
 
 

@@ -28,6 +28,9 @@ COMMAND_SEQ_COUNT = 16
 
 NONE_MINUTES = 0xFFFF
 
+# Screen standby setting, byte 81 of the report (confirmed by changing it in the app).
+SCREEN_STANDBY = {0: "Never", 1: "30 seconds", 2: "1 minute", 3: "5 minutes", 4: "30 minutes"}
+
 
 def crc16_arc(data: bytes) -> int:
     """CRC-16/ARC (poly 0x8005 reflected, init 0)."""
@@ -97,6 +100,7 @@ class Report:
     ac_charging: bool
     dc_charging: bool  # charging from DC / solar
     charge_complete: bool  # likely, not confirmed (see README)
+    screen_standby_code: int  # byte 81; see SCREEN_STANDBY
     sound_on: bool
     auto_fan_on: bool  # the Auto-Fan setting, not whether the fans are spinning
     eco_on: bool
@@ -104,6 +108,13 @@ class Report:
     usbc2_active: bool
     usba1_active: bool
     usba2_active: bool
+
+    @property
+    def screen_standby(self) -> str:
+        """The screen standby setting as text; unknown codes are shown as "Unknown (n)"."""
+        return SCREEN_STANDBY.get(
+            self.screen_standby_code, f"Unknown ({self.screen_standby_code})"
+        )
 
     @property
     def charging(self) -> bool:
@@ -215,6 +226,7 @@ def parse_report(payload: str | bytes | bytearray) -> Report | None:
         ac_charging=_bit(frame, 77, 0x10),
         dc_charging=_bit(frame, 77, 0x20),
         charge_complete=_bit(frame, 77, 0x40),
+        screen_standby_code=frame[81],
         sound_on=_bit(frame, 78, 0x01),
         auto_fan_on=_bit(frame, 78, 0x08),
         eco_on=_bit(frame, 79, 0x40),
