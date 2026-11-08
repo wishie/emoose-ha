@@ -32,7 +32,9 @@ fail the CRC and must be dropped.
 | `0x06` | DC output | 1 on, 0 off |
 
 The station answers `55 AA 00 0D <seq> <counter> 12 <target> 88 <crc16> 33 CC`
-(`0x88` = accepted). Sequence bytes 0x20..0x2F were verified to be accepted.
+(`0x88` = accepted). A response with target `0x0A` was seen when Auto-Fan was toggled in the app, so
+`0x0A` is almost certainly the Auto-Fan command; the command frame itself (and its on/off values)
+has not been captured yet, so it is not implemented. Sequence bytes 0x20..0x2F were verified to be accepted.
 
 ## Report layout (byte offsets, big-endian)
 
@@ -56,7 +58,7 @@ The station answers `55 AA 00 0D <seq> <counter> 12 <target> 88 <crc16> 33 CC`
 | 73-74 | battery voltage, 10 mV | | likely |
 | 75-76 | battery current, signed, 10 mA (+ = charging) | | likely |
 | 77 | flags: `0x02` AC out, `0x04` DC out, `0x10` charging from AC, `0x20` charging from DC / solar, `0x40` charge complete | `0x80` and `0x01` always set; `0x40` seen once | confirmed / likely |
-| 78 | flags: `0x01` sound on | `0x04` and `0x08` set, meaning unknown | confirmed |
+| 78 | flags: `0x01` sound on, `0x08` Auto-Fan setting on | `0x04` set, meaning unknown; `0x08` is the setting, not whether the fans spin | confirmed |
 | 79 | flags: `0x01` USB-C 1, `0x02` USB-C 2, `0x10` USB-A 1, `0x20` USB-A 2, `0x40` ECO | flags lag a second or two after unplugging; `0x04`, `0x08`, `0x80` unknown | confirmed |
 | 96-97 | device id (the number in the topic) | | confirmed |
 | 99-101 | software version, shown as b101.b99.b100 | | confirmed |
@@ -75,5 +77,5 @@ The station answers `55 AA 00 0D <seq> <counter> 12 <target> 88 <crc16> 33 CC`
 
 ## Not found in the telemetry
 
-Fan state or speed, the touchscreen being on or off, the Wi-Fi and Bluetooth MAC addresses,
+Whether the fans are actually spinning, the touchscreen being on or off, the Wi-Fi and Bluetooth MAC addresses,
 and any command other than the AC and DC output switches (the app may send others).

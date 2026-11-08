@@ -98,6 +98,7 @@ class Report:
     dc_charging: bool  # charging from DC / solar
     charge_complete: bool  # likely, not confirmed (see README)
     sound_on: bool
+    auto_fan_on: bool  # the Auto-Fan setting, not whether the fans are spinning
     eco_on: bool
     usbc1_active: bool
     usbc2_active: bool
@@ -215,6 +216,7 @@ def parse_report(payload: str | bytes | bytearray) -> Report | None:
         dc_charging=_bit(frame, 77, 0x20),
         charge_complete=_bit(frame, 77, 0x40),
         sound_on=_bit(frame, 78, 0x01),
+        auto_fan_on=_bit(frame, 78, 0x08),
         eco_on=_bit(frame, 79, 0x40),
         usbc1_active=_bit(frame, 79, 0x01),
         usbc2_active=_bit(frame, 79, 0x02),

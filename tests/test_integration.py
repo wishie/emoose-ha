@@ -104,6 +104,16 @@ async def test_solar_charging_report(hass, mqtt_mock):
     assert state(hass, "binary_sensor.emoose_x300_charging") == "on"
 
 
+async def test_auto_fan_setting(hass, mqtt_mock):
+    await setup_entry(hass)
+    async_fire_mqtt_message(hass, REPORT_TOPIC, FRAMES["auto_fan_on_solar_charging"])
+    await hass.async_block_till_done()
+    assert state(hass, "binary_sensor.emoose_x300_auto_fan") == "on"
+    async_fire_mqtt_message(hass, REPORT_TOPIC, FRAMES["auto_fan_off_solar_charging"])
+    await hass.async_block_till_done()
+    assert state(hass, "binary_sensor.emoose_x300_auto_fan") == "off"
+
+
 async def test_invalid_payloads_are_ignored(hass, mqtt_mock):
     await setup_entry(hass)
     async_fire_mqtt_message(hass, REPORT_TOPIC, FRAMES["idle_95"])

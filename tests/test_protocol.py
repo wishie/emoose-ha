@@ -143,6 +143,18 @@ def test_ac_charging_uses_ac_flag_only():
     assert r.dc_input_power == 0
 
 
+def test_auto_fan_setting_toggle():
+    # Captured before and after turning Auto-Fan off in the app; only byte 78 bit 0x08 moved
+    # (apart from the solar charging values, which were varying on their own).
+    on = report("auto_fan_on_solar_charging")
+    off = report("auto_fan_off_solar_charging")
+    assert on.auto_fan_on and not off.auto_fan_on
+    assert on.sound_on and off.sound_on  # sound untouched
+    assert on.dc_charging and off.dc_charging
+    # Frames without the setting changed all had Auto-Fan on.
+    assert all(report(n).auto_fan_on for n in ("idle_95", "ac_charge_120w", "solar_charge_120w"))
+
+
 def test_eco_and_sound_toggles():
     assert report("eco_on").eco_on
     assert not report("eco_off").eco_on

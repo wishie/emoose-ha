@@ -77,6 +77,12 @@ BINARY_SENSORS: tuple[EmooseBinarySensorDescription, ...] = (
         value_fn=lambda r: r.sound_on,
     ),
     EmooseBinarySensorDescription(
+        key="auto_fan",
+        name="Auto-fan",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda r: r.auto_fan_on,
+    ),
+    EmooseBinarySensorDescription(
         key="eco_mode",
         name="ECO mode",
         entity_category=EntityCategory.DIAGNOSTIC,
