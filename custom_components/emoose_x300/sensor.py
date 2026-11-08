@@ -105,6 +105,7 @@ SENSORS: tuple[EmooseSensorDescription, ...] = (
     ),
     _power("input_power", "Input power", "input_power"),
     _power("ac_input_power", "AC input power", "ac_input_power"),
+    _power("dc_input_power", "DC input power", "dc_input_power"),
     _power("output_power", "Output power", "output_power"),
     _power("ac_output_power", "AC output power", "ac_output_power"),
     _power("dc_output_power", "DC output power", "dc_output_power"),

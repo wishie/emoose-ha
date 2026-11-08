@@ -11,7 +11,7 @@ unit's own network traffic; use it at your own risk.
 |---|---|
 | Battery %, battery voltage, current and power | power is negative while discharging |
 | Time to empty / to full (minutes and `h:mm`) | the unit's own estimates |
-| Input power, AC input power | |
+| Input power, AC input power, DC / solar input power | |
 | Output power: total, AC, DC, USB-C 1, USB-C 2, USB-A 1, USB-A 2 | |
 | Three temperatures | which sensor is which is unknown |
 | AC output / DC output (sensors **and switches**) | the switches send the same commands as the app |
@@ -22,8 +22,8 @@ unit's own network traffic; use it at your own risk.
 Details and confidence levels are in [docs/protocol.md](docs/protocol.md).
 
 Not available because the unit does not report them: fan state, touchscreen on/off, MAC
-addresses. Not yet decoded: solar / 12 V charging input, and any app command beyond the AC
-and DC output toggles.
+addresses. Not yet decoded: any app command beyond the AC and DC output toggles. Solar / DC charging
+was confirmed with a panel; 12 V car-charger input has not been tried.
 
 ## How it works, and the catch
 

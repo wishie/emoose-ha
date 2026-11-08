@@ -123,6 +123,26 @@ def test_ac_charging_120w():
     assert r.battery_power == pytest.approx(113.5)
 
 
+def test_solar_charging_120w():
+    r = report("solar_charge_120w")
+    assert r.dc_charging and not r.ac_charging and r.charging
+    assert not r.charge_complete
+    assert r.battery_percent == 27
+    assert r.input_power == pytest.approx(120.0)
+    assert r.dc_input_power == pytest.approx(120.0)
+    assert r.ac_input_power == 0
+    assert r.minutes_to_full == 79
+    assert r.battery_voltage == pytest.approx(20.27)
+    assert r.battery_current == pytest.approx(5.68)
+    assert r.battery_power == pytest.approx(115.1)
+
+
+def test_ac_charging_uses_ac_flag_only():
+    r = report("ac_charge_120w")
+    assert r.ac_charging and not r.dc_charging and r.charging
+    assert r.dc_input_power == 0
+
+
 def test_eco_and_sound_toggles():
     assert report("eco_on").eco_on
     assert not report("eco_off").eco_on

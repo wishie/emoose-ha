@@ -76,6 +76,7 @@ class Report:
 
     input_power: float
     ac_input_power: float
+    dc_input_power: float  # solar / 12 V charging input
     output_power: float
     ac_output_power: float
     dc_output_power: float
@@ -93,7 +94,8 @@ class Report:
 
     ac_output_on: bool
     dc_output_on: bool
-    charging: bool
+    ac_charging: bool
+    dc_charging: bool  # charging from DC / solar
     charge_complete: bool  # likely, not confirmed (see README)
     sound_on: bool
     eco_on: bool
@@ -101,6 +103,11 @@ class Report:
     usbc2_active: bool
     usba1_active: bool
     usba2_active: bool
+
+    @property
+    def charging(self) -> bool:
+        """True while charging from AC or from DC / solar."""
+        return self.ac_charging or self.dc_charging
 
     @property
     def battery_power(self) -> float:
@@ -189,6 +196,7 @@ def parse_report(payload: str | bytes | bytearray) -> Report | None:
         minutes_to_full=_minutes(frame, 35),
         input_power=_watts(frame, 37),
         ac_input_power=_watts(frame, 41),
+        dc_input_power=_watts(frame, 43),
         output_power=_watts(frame, 39),
         ac_output_power=_watts(frame, 45),
         dc_output_power=_watts(frame, 47),
@@ -203,7 +211,8 @@ def parse_report(payload: str | bytes | bytearray) -> Report | None:
         temperature_3=_celsius(frame, 67),
         ac_output_on=_bit(frame, 77, 0x02),
         dc_output_on=_bit(frame, 77, 0x04),
-        charging=_bit(frame, 77, 0x10),
+        ac_charging=_bit(frame, 77, 0x10),
+        dc_charging=_bit(frame, 77, 0x20),
         charge_complete=_bit(frame, 77, 0x40),
         sound_on=_bit(frame, 78, 0x01),
         eco_on=_bit(frame, 79, 0x40),

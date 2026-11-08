@@ -47,6 +47,7 @@ The station answers `55 AA 00 0D <seq> <counter> 12 <target> 88 <crc16> 33 CC`
 | 37-38 | total input power, 0.1 W | reads 0 once the unit says 100% | confirmed |
 | 39-40 | total output power, 0.1 W | | confirmed |
 | 41-42 | AC input power, 0.1 W | | confirmed |
+| 43-44 | DC / solar input power, 0.1 W | confirmed with a solar panel | confirmed |
 | 45-46 | AC output power, 0.1 W | | confirmed |
 | 47-48 | DC output power, 0.1 W | | confirmed |
 | 51-52 / 53-54 | USB-C 1 / USB-C 2 power, 0.1 W | | confirmed |
@@ -54,7 +55,7 @@ The station answers `55 AA 00 0D <seq> <counter> 12 <target> 88 <crc16> 33 CC`
 | 63-68 | three temperatures, tenths of a kelvin | which sensor is which is unknown | likely |
 | 73-74 | battery voltage, 10 mV | | likely |
 | 75-76 | battery current, signed, 10 mA (+ = charging) | | likely |
-| 77 | flags: `0x02` AC out, `0x04` DC out, `0x10` charging, `0x40` charge complete | `0x80` and `0x01` always set; `0x40` seen once | confirmed / likely |
+| 77 | flags: `0x02` AC out, `0x04` DC out, `0x10` charging from AC, `0x20` charging from DC / solar, `0x40` charge complete | `0x80` and `0x01` always set; `0x40` seen once | confirmed / likely |
 | 78 | flags: `0x01` sound on | `0x04` and `0x08` set, meaning unknown | confirmed |
 | 79 | flags: `0x01` USB-C 1, `0x02` USB-C 2, `0x10` USB-A 1, `0x20` USB-A 2, `0x40` ECO | flags lag a second or two after unplugging; `0x04`, `0x08`, `0x80` unknown | confirmed |
 | 96-97 | device id (the number in the topic) | | confirmed |
@@ -75,5 +76,4 @@ The station answers `55 AA 00 0D <seq> <counter> 12 <target> 88 <crc16> 33 CC`
 ## Not found in the telemetry
 
 Fan state or speed, the touchscreen being on or off, the Wi-Fi and Bluetooth MAC addresses,
-solar or 12 V charging input (probably offset 43-44, untested), and any command other than
-the AC and DC output switches (the app may send others).
+and any command other than the AC and DC output switches (the app may send others).
