@@ -128,6 +128,33 @@ async def test_screen_standby_sensor(hass, mqtt_mock):
         assert state(hass, "sensor.emoose_x300_screen_standby") == label
 
 
+async def test_ac_output_frequency_sensor(hass, mqtt_mock):
+    await setup_entry(hass)
+    for name, expected in (
+        ("idle_95", "unknown"),
+        ("ac_on_50hz_charging", "50"),
+        ("ac_on_60hz_charging", "60"),
+    ):
+        async_fire_mqtt_message(hass, REPORT_TOPIC, FRAMES[name])
+        await hass.async_block_till_done()
+        assert state(hass, "sensor.emoose_x300_ac_output_frequency") == expected
+
+
+async def test_ac_timeout_sensor(hass, mqtt_mock):
+    await setup_entry(hass)
+    for name, expected in (
+        ("ac_timeout_2h_initial", "2 hours"),
+        ("ac_timeout_never", "Never"),
+        ("ac_timeout_option_1", "Unknown (1)"),
+        ("ac_timeout_2h", "2 hours"),
+        ("ac_timeout_8h", "8 hours"),
+        ("ac_timeout_12h", "12 hours"),
+    ):
+        async_fire_mqtt_message(hass, REPORT_TOPIC, FRAMES[name])
+        await hass.async_block_till_done()
+        assert state(hass, "sensor.emoose_x300_ac_timeout") == expected
+
+
 async def test_invalid_payloads_are_ignored(hass, mqtt_mock):
     await setup_entry(hass)
     async_fire_mqtt_message(hass, REPORT_TOPIC, FRAMES["idle_95"])

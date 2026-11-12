@@ -28,6 +28,13 @@ COMMAND_SEQ_COUNT = 16
 
 NONE_MINUTES = 0xFFFF
 
+# AC output frequency, byte 110 (0 while the AC output is off).
+AC_FREQUENCIES_HZ = {1: 50, 2: 60}
+
+# AC timeout setting, byte 82 (confirmed by changing it in the app). Code 1 is one more menu option
+# that has not been identified yet; it is shown as "Unknown (1)".
+AC_TIMEOUTS = {0: "Never", 2: "2 hours", 3: "8 hours", 4: "12 hours"}
+
 # Screen standby setting, byte 81 of the report (confirmed by changing it in the app).
 SCREEN_STANDBY = {0: "Never", 1: "30 seconds", 2: "1 minute", 3: "5 minutes", 4: "30 minutes"}
 
@@ -101,6 +108,8 @@ class Report:
     dc_charging: bool  # charging from DC / solar
     charge_complete: bool  # likely, not confirmed (see README)
     screen_standby_code: int  # byte 81; see SCREEN_STANDBY
+    ac_timeout_code: int  # byte 82; see AC_TIMEOUTS
+    ac_frequency_code: int  # byte 110: 0 AC off, 1 = 50 Hz, 2 = 60 Hz
     sound_on: bool
     auto_fan_on: bool  # the Auto-Fan setting, not whether the fans are spinning
     eco_on: bool
@@ -108,6 +117,16 @@ class Report:
     usbc2_active: bool
     usba1_active: bool
     usba2_active: bool
+
+    @property
+    def ac_frequency_hz(self) -> int | None:
+        """AC output frequency in Hz, or None while the AC output is off (or the code is unknown)."""
+        return AC_FREQUENCIES_HZ.get(self.ac_frequency_code)
+
+    @property
+    def ac_timeout(self) -> str:
+        """The AC timeout setting as text; unknown codes are shown as "Unknown (n)"."""
+        return AC_TIMEOUTS.get(self.ac_timeout_code, f"Unknown ({self.ac_timeout_code})")
 
     @property
     def screen_standby(self) -> str:
@@ -227,6 +246,8 @@ def parse_report(payload: str | bytes | bytearray) -> Report | None:
         dc_charging=_bit(frame, 77, 0x20),
         charge_complete=_bit(frame, 77, 0x40),
         screen_standby_code=frame[81],
+        ac_timeout_code=frame[82],
+        ac_frequency_code=frame[110],
         sound_on=_bit(frame, 78, 0x01),
         auto_fan_on=_bit(frame, 78, 0x08),
         eco_on=_bit(frame, 79, 0x40),

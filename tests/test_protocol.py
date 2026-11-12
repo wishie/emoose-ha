@@ -2,6 +2,7 @@
 
 import dataclasses
 import importlib.util
+import itertools
 import pathlib
 import sys
 
@@ -170,6 +171,47 @@ def test_screen_standby_codes(name, code, label):
     r = report(name)
     assert r.screen_standby_code == code
     assert r.screen_standby == label
+
+
+def test_ac_output_frequency():
+    # Captured with the AC output on at 50 Hz and then at 60 Hz (switched in the app).
+    r50 = report("ac_on_50hz_charging")
+    r60 = report("ac_on_60hz_charging")
+    assert (r50.ac_frequency_code, r50.ac_frequency_hz) == (1, 50)
+    assert (r60.ac_frequency_code, r60.ac_frequency_hz) == (2, 60)
+    assert r50.ac_output_on and r60.ac_output_on
+    assert r50.ac_charging and r60.ac_charging  # AC out and AC charging at the same time
+    # Every earlier AC-on frame was at 50 Hz; with the AC output off the code is 0.
+    assert report("ac_2w").ac_frequency_hz == 50
+    assert report("ac_on_idle").ac_frequency_hz == 50
+    assert report("idle_95").ac_frequency_code == 0
+    assert report("idle_95").ac_frequency_hz is None
+
+
+def test_ac_timeout_codes():
+    # Captured while stepping the app's AC Timeout setting through its menu.
+    assert report("ac_timeout_2h_initial").ac_timeout == "2 hours"
+    assert report("ac_timeout_never").ac_timeout == "Never"
+    assert report("ac_timeout_option_1").ac_timeout_code == 1
+    assert report("ac_timeout_option_1").ac_timeout == "Unknown (1)"  # option not yet identified
+    assert report("ac_timeout_2h").ac_timeout == "2 hours"
+    assert report("ac_timeout_8h").ac_timeout == "8 hours"
+    assert report("ac_timeout_12h").ac_timeout == "12 hours"
+    # Every frame captured before the setting was changed had the factory 2 hours (code 2).
+    assert report("idle_95").ac_timeout_code == 2
+    assert report("ac_charge_120w").ac_timeout == "2 hours"
+
+
+def test_ac_timeout_change_only_moves_byte_82():
+    # Only the AC timeout code differs between consecutive captures (the counter, CRC and
+    # the wandering 92-93 field aside).
+    names = ["ac_timeout_2h_initial", "ac_timeout_never", "ac_timeout_option_1",
+             "ac_timeout_2h", "ac_timeout_8h", "ac_timeout_12h"]
+    frames = [bytes.fromhex(FRAMES[n]) for n in names]
+    ignored = {4, 5, 92, 93, 118, 119}
+    for before, after in itertools.pairwise(frames):
+        changed = [i for i in range(len(before)) if before[i] != after[i] and i not in ignored]
+        assert changed == [82]
 
 
 def test_temperature_1_can_read_below_25():

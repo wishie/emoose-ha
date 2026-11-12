@@ -16,6 +16,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfTime,
@@ -114,6 +115,14 @@ SENSORS: tuple[EmooseSensorDescription, ...] = (
     _power("usba1_power", "USB-A 1 output power", "usba1_power"),
     _power("usba2_power", "USB-A 2 output power", "usba2_power"),
     EmooseSensorDescription(
+        key="ac_output_frequency",
+        name="AC output frequency",
+        device_class=SensorDeviceClass.FREQUENCY,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda r: r.ac_frequency_hz,
+    ),
+    EmooseSensorDescription(
         key="battery_voltage",
         name="Battery voltage",
         device_class=SensorDeviceClass.VOLTAGE,
@@ -137,6 +146,7 @@ SENSORS: tuple[EmooseSensorDescription, ...] = (
     _text("software_version", "Software version", "software_version", "mdi:chip"),
     _text("hardware_version", "Hardware version", "hardware_version", "mdi:chip"),
     _text("screen_standby", "Screen standby", "screen_standby", "mdi:monitor"),
+    _text("ac_timeout", "AC timeout", "ac_timeout", "mdi:timer-outline"),
 )
 
 

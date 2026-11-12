@@ -34,7 +34,12 @@ fail the CRC and must be dropped.
 The station answers `55 AA 00 0D <seq> <counter> 12 <target> 88 <crc16> 33 CC`
 (`0x88` = accepted). Changing the screen standby setting in the app produces a 12-byte response in a different class,
 `55 AA 00 0C <seq> <counter> 16 88 <crc16> 33 CC`, with no target byte; the command frame has not been
-captured. A response with target `0x0A` was seen when Auto-Fan was toggled in the app, so
+captured. A response with target `0x02` was seen when the AC output frequency was switched in the app, so `0x02` is
+almost certainly the frequency command (its value byte has not been captured). Changing the AC timeout produces a
+12-byte response in class `0x18`; the five commands that were captured fit
+`55 AA 00 0C <seq> 00 18 <value> <crc16> 33 CC` with the value equal to the code in byte 82 (the printable
+parts of each captured line match the computed frames, and the one fully printable checksum, `7D 40` for
+seq `0x47` and value 2, matches exactly). A response with target `0x0A` was seen when Auto-Fan was toggled in the app, so
 `0x0A` is almost certainly the Auto-Fan command; the command frame itself (and its on/off values)
 has not been captured yet, so it is not implemented. Sequence bytes 0x20..0x2F were verified to be accepted.
 
@@ -63,10 +68,11 @@ has not been captured yet, so it is not implemented. Sequence bytes 0x20..0x2F w
 | 78 | flags: `0x01` sound on, `0x08` Auto-Fan setting on | `0x04` set, meaning unknown; `0x08` is the setting, not whether the fans spin | confirmed |
 | 79 | flags: `0x01` USB-C 1, `0x02` USB-C 2, `0x10` USB-A 1, `0x20` USB-A 2, `0x40` ECO | flags lag a second or two after unplugging; `0x04`, `0x08`, `0x80` unknown | confirmed |
 | 81 | screen standby setting: `0` never, `1` 30 seconds, `2` 1 minute, `3` 5 minutes, `4` 30 minutes | all five options in the app's menu checked | confirmed |
+| 82 | AC timeout setting: `0` never, `2` 2 hours, `3` 8 hours, `4` 12 hours | `1` is one more menu option that has not been identified; the unit ships at `2`; the app does not say what the timeout switches off | confirmed |
 | 96-97 | device id (the number in the topic) | | confirmed |
 | 99-101 | software version, shown as b101.b99.b100 | | confirmed |
 | 104-106 | hardware version, shown as b106.b104.b105 | | confirmed |
-| 110 | mirrors AC output on | | likely |
+| 110 | AC output frequency: `1` = 50 Hz, `2` = 60 Hz, `0` while the AC output is off | whether the setting is visible with AC off is untested | confirmed |
 | 118-119 | CRC | | confirmed |
 
 ## Observations worth knowing
