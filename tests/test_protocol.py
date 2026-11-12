@@ -162,6 +162,7 @@ def test_auto_fan_setting_toggle():
         ("screen_never", 0, "Never"),
         ("screen_30s", 1, "30 seconds"),
         ("screen_1min", 2, "1 minute"),
+        ("screen_30min", 4, "30 minutes"),
         ("idle_95", 3, "5 minutes"),  # every frame captured before the setting was changed
     ],
 )
@@ -169,6 +170,12 @@ def test_screen_standby_codes(name, code, label):
     r = report(name)
     assert r.screen_standby_code == code
     assert r.screen_standby == label
+
+
+def test_temperature_1_can_read_below_25():
+    # Not clamped at 25.0 C: this frame reads 24.0 while temperatures 2 and 3 stay at 25.0.
+    r = report("screen_30min")
+    assert (r.temperature_1, r.temperature_2, r.temperature_3) == (24.0, 25.0, 25.0)
 
 
 def test_unknown_screen_standby_code_is_shown_as_unknown():

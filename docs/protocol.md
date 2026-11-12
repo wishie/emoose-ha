@@ -62,7 +62,7 @@ has not been captured yet, so it is not implemented. Sequence bytes 0x20..0x2F w
 | 77 | flags: `0x02` AC out, `0x04` DC out, `0x10` charging from AC, `0x20` charging from DC / solar, `0x40` charge complete | `0x80` and `0x01` always set; `0x40` seen once | confirmed / likely |
 | 78 | flags: `0x01` sound on, `0x08` Auto-Fan setting on | `0x04` set, meaning unknown; `0x08` is the setting, not whether the fans spin | confirmed |
 | 79 | flags: `0x01` USB-C 1, `0x02` USB-C 2, `0x10` USB-A 1, `0x20` USB-A 2, `0x40` ECO | flags lag a second or two after unplugging; `0x04`, `0x08`, `0x80` unknown | confirmed |
-| 81 | screen standby setting: `0` never, `1` 30 seconds, `2` 1 minute, `3` 5 minutes | other menu options, if any, are untested | confirmed |
+| 81 | screen standby setting: `0` never, `1` 30 seconds, `2` 1 minute, `3` 5 minutes, `4` 30 minutes | all five options in the app's menu checked | confirmed |
 | 96-97 | device id (the number in the topic) | | confirmed |
 | 99-101 | software version, shown as b101.b99.b100 | | confirmed |
 | 104-106 | hardware version, shown as b106.b104.b105 | | confirmed |

@@ -121,6 +121,7 @@ async def test_screen_standby_sensor(hass, mqtt_mock):
         ("screen_30s", "30 seconds"),
         ("screen_1min", "1 minute"),
         ("screen_never", "Never"),
+        ("screen_30min", "30 minutes"),
     ):
         async_fire_mqtt_message(hass, REPORT_TOPIC, FRAMES[name])
         await hass.async_block_till_done()
