@@ -16,7 +16,10 @@ from .const import AVAILABILITY_TIMEOUT, COMMAND_SUFFIX, REPORT_SUFFIX
 from .protocol import (
     COMMAND_SEQ_MIN,
     Report,
+    AC_TIMEOUT_SEQ_MIN,
+    build_ac_timeout_command,
     build_command,
+    next_ac_timeout_sequence,
     next_sequence,
     parse_report,
 )
@@ -37,6 +40,7 @@ class EmooseHub:
         self._unsubscribe: CALLBACK_TYPE | None = None
         self._cancel_expiry: CALLBACK_TYPE | None = None
         self._seq = COMMAND_SEQ_MIN
+        self._ac_timeout_seq = AC_TIMEOUT_SEQ_MIN
 
     @property
     def report_topic(self) -> str:
@@ -107,6 +111,23 @@ class EmooseHub:
         self._cancel_expiry = None
         self._available = False
         self._notify()
+
+    async def async_send_ac_timeout(self, value: int) -> None:
+        """Set the AC timeout (byte 82 code, see protocol.AC_TIMEOUTS).
+
+        Uses its own sequence counter in the 0x40.. range the app uses.
+        The shared 0x20.. counter is acked (0x88) but ignored for this
+        command class, so it must not be reused here.
+        """
+        seq = self._ac_timeout_seq
+        self._ac_timeout_seq = next_ac_timeout_sequence(seq)
+        await mqtt.async_publish(
+            self.hass,
+            self.command_topic,
+            build_ac_timeout_command(seq, value),
+            qos=0,
+            retain=False,
+        )
 
     async def async_send_command(self, target: int, value: int) -> None:
         """Switch an output on (1) or off (0)."""

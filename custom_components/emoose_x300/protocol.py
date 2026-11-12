@@ -8,6 +8,10 @@ Frame layout (reverse engineered from captured traffic, see the README):
   (big-endian) in the two bytes before the end marker, computed over everything before it.
 * The station publishes a 122-byte *report* every few seconds as an ASCII-hex string.
 * Commands are 13 raw bytes: ``55 AA 00 0D <seq> 00 12 <target> <value> <crc> 33 CC``.
+* The AC timeout command is 12 raw bytes:
+  ``55 AA 00 0C <seq> 00 18 <value> <crc> 33 CC`` (see ``build_ac_timeout_command``).
+  The app sends this with seq bytes in the 0x40.. range (captured 0x45..0x49, 0x54);
+  a seq in the 0x20..0x2F range is acked (0x88) but ignored by the station.
 """
 
 from __future__ import annotations
@@ -21,19 +25,29 @@ REPORT_HEX_LENGTH = REPORT_LENGTH * 2
 
 TARGET_DC = 0x06
 TARGET_AC = 0x07
+TARGET_TURBO = 0x09  # Turbo Boost; only toggleable while the AC output is on
 
 # Sequence bytes 0x20..0x2F were verified to be accepted by the station.
 COMMAND_SEQ_MIN = 0x20
 COMMAND_SEQ_COUNT = 16
+
+# AC timeout commands use a separate seq range. The app uses 0x40.. (captured
+# 0x45..0x49, 0x54); HA sending 0x20..0x2F got a 0x88 ack but no change.
+AC_TIMEOUT_SEQ_MIN = 0x40
+AC_TIMEOUT_SEQ_COUNT = 16
 
 NONE_MINUTES = 0xFFFF
 
 # AC output frequency, byte 110 (0 while the AC output is off).
 AC_FREQUENCIES_HZ = {1: 50, 2: 60}
 
-# AC timeout setting, byte 82 (confirmed by changing it in the app). Code 1 is one more menu option
-# that has not been identified yet; it is shown as "Unknown (1)".
-AC_TIMEOUTS = {0: "Never", 2: "2 hours", 3: "8 hours", 4: "12 hours"}
+# AC timeout setting, byte 82 (confirmed by changing it in the app).
+# Codes confirmed from captured frames, byte 82 stepping 2 -> 0 -> 1 -> 2 -> 3 -> 4:
+# 0 = Never, 1 = 1 hour, 2 = 2 hours, 3 = 8 hours, 4 = 12 hours.
+# The command value is the same code (NOT hours): the app sends value 0x03 for 8h,
+# proved by its CRC 0x3985 for seq 0x54. Verified in HA: seq 0x42 / value 2
+# changed byte 82 from 3 to 2 (report byte 4 echoed seq 0x42).
+AC_TIMEOUTS = {0: "Never", 1: "1 hour", 2: "2 hours", 3: "8 hours", 4: "12 hours"}
 
 # Screen standby setting, byte 81 of the report (confirmed by changing it in the app).
 SCREEN_STANDBY = {0: "Never", 1: "30 seconds", 2: "1 minute", 3: "5 minutes", 4: "30 minutes"}
@@ -55,13 +69,33 @@ def next_sequence(seq: int) -> int:
 
 
 def build_command(seq: int, target: int, value: int) -> bytes:
-    """Build a raw command frame to switch an output on (1) or off (0)."""
-    if target not in (TARGET_AC, TARGET_DC):
+    """Build a raw command frame to switch an output / Turbo Boost on (1) or off (0)."""
+    if target not in (TARGET_AC, TARGET_DC, TARGET_TURBO):
         raise ValueError(f"unknown command target {target!r}")
     if value not in (0, 1):
         raise ValueError(f"value must be 0 or 1, got {value!r}")
     body = bytes([0x55, 0xAA, 0x00, 0x0D, seq & 0xFF, 0x00, 0x12, target, value])
     return body + crc16_arc(body).to_bytes(2, "big") + FRAME_END
+
+
+def build_ac_timeout_command(seq: int, value: int) -> bytes:
+    """Build a raw command frame to set the AC timeout (byte 82).
+
+    Verified against captured frames: seq 0x47, value 2 (2 hours)
+    gives CRC-16/ARC 0x7D40; seq 0x54, value 3 (8 hours) gives 0x3985.
+    """
+    if value not in AC_TIMEOUTS:
+        raise ValueError(f"unknown AC timeout code {value!r}")
+    body = bytes([0x55, 0xAA, 0x00, 0x0C, seq & 0xFF, 0x00, 0x18, value])
+    frame = body + crc16_arc(body).to_bytes(2, "big") + FRAME_END
+    return frame
+
+
+def next_ac_timeout_sequence(seq: int) -> int:
+    """Next AC timeout sequence byte, wrapping inside its verified range."""
+    return AC_TIMEOUT_SEQ_MIN + (
+        (seq - AC_TIMEOUT_SEQ_MIN + 1) % AC_TIMEOUT_SEQ_COUNT
+    )
 
 
 def format_hm(minutes: int | None) -> str | None:
@@ -113,6 +147,7 @@ class Report:
     sound_on: bool
     auto_fan_on: bool  # the Auto-Fan setting, not whether the fans are spinning
     eco_on: bool
+    turbo_boost_on: bool  # byte 78, bit 0x02; only toggleable while AC output is on
     usbc1_active: bool
     usbc2_active: bool
     usba1_active: bool
@@ -251,6 +286,7 @@ def parse_report(payload: str | bytes | bytearray) -> Report | None:
         sound_on=_bit(frame, 78, 0x01),
         auto_fan_on=_bit(frame, 78, 0x08),
         eco_on=_bit(frame, 79, 0x40),
+        turbo_boost_on=_bit(frame, 78, 0x02),
         usbc1_active=_bit(frame, 79, 0x01),
         usbc2_active=_bit(frame, 79, 0x02),
         usba1_active=_bit(frame, 79, 0x10),

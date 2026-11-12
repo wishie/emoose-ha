@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_TOPIC_PREFIX
 from .hub import EmooseHub
 
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SWITCH, Platform.SELECT]
 
 type EmooseConfigEntry = ConfigEntry[EmooseHub]
 
