@@ -8,6 +8,12 @@ Frame layout (reverse engineered from captured traffic, see the README):
   (big-endian) in the two bytes before the end marker, computed over everything before it.
 * The station publishes a 122-byte *report* every few seconds as an ASCII-hex string.
 * Commands are 13 raw bytes: ``55 AA 00 0D <seq> 00 12 <target> <value> <crc> 33 CC``.
+* Frequency command (confirmed in HA): same 13-byte form as AC/DC/Turbo,
+  target 0x02, value = index (0 = 50 Hz, 1 = 60 Hz), NOT the report code
+  (report byte 110 is 1 = 50 Hz, 2 = 60 Hz). Proved: HA sent value 1 with
+  seq 0x60 while on 60 Hz -> no change (value 1 = current); HA sent value 0
+  with seq 0x61 -> byte 110 went 2 -> 1 (60 -> 50 Hz). The earlier HA
+  failure (value 2, seq 0x20) was the invalid value, not the seq range.
 * The AC timeout command is 12 raw bytes:
   ``55 AA 00 0C <seq> 00 18 <value> <crc> 33 CC`` (see ``build_ac_timeout_command``).
   The app sends this with seq bytes in the 0x40.. range (captured 0x45..0x49, 0x54);
@@ -26,6 +32,7 @@ REPORT_HEX_LENGTH = REPORT_LENGTH * 2
 TARGET_DC = 0x06
 TARGET_AC = 0x07
 TARGET_TURBO = 0x09  # Turbo Boost; only toggleable while the AC output is on
+TARGET_FREQUENCY = 0x02  # AC output frequency: value 0 = 50 Hz, 1 = 60 Hz (confirmed)
 
 # Sequence bytes 0x20..0x2F were verified to be accepted by the station.
 COMMAND_SEQ_MIN = 0x20
@@ -70,9 +77,12 @@ def next_sequence(seq: int) -> int:
 
 def build_command(seq: int, target: int, value: int) -> bytes:
     """Build a raw command frame to switch an output / Turbo Boost on (1) or off (0)."""
-    if target not in (TARGET_AC, TARGET_DC, TARGET_TURBO):
+    if target not in (TARGET_AC, TARGET_DC, TARGET_TURBO, TARGET_FREQUENCY):
         raise ValueError(f"unknown command target {target!r}")
-    if value not in (0, 1):
+    if target == TARGET_FREQUENCY:
+        if value not in (0, 1):
+            raise ValueError(f"frequency value must be 0 (50 Hz) or 1 (60 Hz), got {value!r}")
+    elif value not in (0, 1):
         raise ValueError(f"value must be 0 or 1, got {value!r}")
     body = bytes([0x55, 0xAA, 0x00, 0x0D, seq & 0xFF, 0x00, 0x12, target, value])
     return body + crc16_arc(body).to_bytes(2, "big") + FRAME_END
